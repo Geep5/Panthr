@@ -55,7 +55,7 @@
 	let keyDraft = $state('');
 
 	function saveKey() {
-		localStorage.setItem('panthr-openai-key', keyDraft.trim());
+		localStorage.setItem('panthr-anthropic-key', keyDraft.trim());
 		keyDraft = '';
 		keyPresent = !!apiKey();
 	}
@@ -65,7 +65,7 @@
 		const nodeId = sel.id;
 		const key = apiKey();
 		if (!key) {
-			updateNodeData(nodeId, { status: 'error', error: 'Add an OpenAI API key first' });
+			updateNodeData(nodeId, { status: 'error', error: 'Add an Anthropic API key first' });
 			return;
 		}
 		const prompt = String(d.prompt ?? '').trim();
@@ -144,11 +144,11 @@
 				<div class="inspector-error">{(d as AiData).error}</div>
 			{/if}
 			{#if !keyPresent}
-				<div class="inspector-hint">No OpenAI API key configured.</div>
+				<div class="inspector-hint">No Anthropic API key configured.</div>
 				<input
 					class="wide"
 					type="password"
-					placeholder="sk-..."
+					placeholder="sk-ant-..."
 					bind:value={keyDraft}
 				/>
 				<button class="action" disabled={!keyDraft.trim()} onclick={saveKey}>Save key</button>

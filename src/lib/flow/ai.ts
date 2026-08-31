@@ -1,33 +1,40 @@
 const SYSTEM = `You generate SVG artwork. Reply with ONLY SVG inner markup (paths, shapes, groups) that fits viewBox "0 0 120 120" — no <svg> wrapper, no code fences, no prose. Bold, flat-color, simple vector style. Center the subject and use most of the canvas.`;
 
-/** Resolve the OpenAI API key: build-time env first, then localStorage. */
+/** Resolve the Anthropic API key: build-time env first, then localStorage. */
 export function apiKey(): string {
 	return (
-		(import.meta.env.VITE_OPENAI_API_KEY as string | undefined) ??
-		localStorage.getItem('panthr-openai-key') ??
+		(import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined) ??
+		localStorage.getItem('panthr-anthropic-key') ??
 		''
 	);
 }
 
-/** Generate SVG inner markup (viewBox 0 0 120 120) for a prompt. */
+/** Generate SVG inner markup (viewBox 0 0 120 120) for a prompt with Fable 5. */
 export async function generateSvg(prompt: string, key: string): Promise<string> {
-	const res = await fetch('https://api.openai.com/v1/chat/completions', {
+	const res = await fetch('https://api.anthropic.com/v1/messages', {
 		method: 'POST',
-		headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+		headers: {
+			'content-type': 'application/json',
+			'x-api-key': key,
+			'anthropic-version': '2023-06-01',
+			'anthropic-dangerous-direct-browser-access': 'true'
+		},
 		body: JSON.stringify({
-			model: 'gpt-4o',
-			max_tokens: 3000,
-			messages: [
-				{ role: 'system', content: SYSTEM },
-				{ role: 'user', content: prompt }
-			]
+			model: 'claude-fable-5',
+			max_tokens: 4000,
+			system: SYSTEM,
+			messages: [{ role: 'user', content: prompt }]
 		})
 	});
 	if (!res.ok) {
-		throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 200)}`);
+		throw new Error(`Anthropic ${res.status}: ${(await res.text()).slice(0, 200)}`);
 	}
 	const json = await res.json();
-	let text: string = json.choices?.[0]?.message?.content ?? '';
+	let text: string =
+		json.content
+			?.filter((b: { type: string }) => b.type === 'text')
+			.map((b: { text: string }) => b.text)
+			.join('') ?? '';
 	text = text.replace(/```(?:svg|xml|html)?/g, '').trim();
 
 	// unwrap a full <svg> document, rescaling its viewBox onto 0 0 120 120
