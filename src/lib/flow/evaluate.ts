@@ -25,13 +25,12 @@ export interface TextData extends Record<string, unknown> {
 	fill: string;
 }
 
-export interface AiData extends Record<string, unknown> {
-	prompt: string;
+export interface TraceData extends Record<string, unknown> {
+	/** Traced inner markup, normalized to viewBox 0 0 120 120. */
 	markup: string;
 	size: number;
-	status: 'idle' | 'loading' | 'error';
-	error: string;
-	progress: string;
+	colors: number;
+	name: string;
 }
 
 export interface DelayData extends Record<string, unknown> {
@@ -182,7 +181,7 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 				}
 			];
 		}
-		if (node.type === 'ai') {
+		if (node.type === 'trace') {
 			const d = node.data;
 			const markup = String(d.markup ?? '');
 			if (!markup) return [];

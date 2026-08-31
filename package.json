@@ -21,6 +21,7 @@
   "dependencies": {
     "@xyflow/svelte": "^1.6.5",
     "@xyflow/system": "^0.0.81",
+    "imagetracerjs": "^1.2.6",
     "lottie-web": "^5.13.0"
   }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useNodes, useSvelteFlow } from '@xyflow/svelte';
-	import { apiKey, generateSvg } from './flow/ai';
-	import type { AiData, PositionData, PreviewData, SvgSourceData } from './flow/evaluate';
+	import { cachedImage, cacheImage, fileToImageData, traceImageData } from './flow/trace';
+	import type { PositionData, PreviewData, SvgSourceData } from './flow/evaluate';
 
 	const nodes = useNodes();
 	const { updateNodeData } = useSvelteFlow();
@@ -12,7 +12,7 @@
 	const LABELS: Record<string, string> = {
 		svgSource: 'SVG Source',
 		text: 'Text',
-		ai: 'AI SVG',
+		trace: 'Trace',
 		scale: 'Scale',
 		translate: 'Move X',
 		rotate: 'Rotate',
@@ -50,36 +50,32 @@
 		});
 	}
 
-	// --- ai generation ---
+	// --- image tracing ---
 
-	let keyPresent = $state(!!apiKey());
-	let keyDraft = $state('');
+	let traceError = $state('');
 
-	function saveKey() {
-		localStorage.setItem('panthr-anthropic-key', keyDraft.trim());
-		keyDraft = '';
-		keyPresent = !!apiKey();
+	async function onTraceFile(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file || !sel) return;
+		const nodeId = sel.id;
+		traceError = '';
+		try {
+			const pixels = await fileToImageData(file);
+			cacheImage(nodeId, pixels);
+			const markup = traceImageData(pixels, Number(d.colors) || 8);
+			updateNodeData(nodeId, { markup, name: file.name, size: 120 });
+		} catch (err) {
+			traceError = String(err).slice(0, 200);
+		}
+		input.value = '';
 	}
 
-	async function generate() {
+	function retrace(colors: number) {
 		if (!sel) return;
-		const nodeId = sel.id;
-		const key = apiKey();
-		if (!key) {
-			updateNodeData(nodeId, { status: 'error', error: 'Add an Anthropic API key first' });
-			return;
-		}
-		const prompt = String(d.prompt ?? '').trim();
-		if (!prompt) return;
-		updateNodeData(nodeId, { status: 'loading', error: '', progress: '' });
-		try {
-			const markup = await generateSvg(prompt, key, (progress) =>
-				updateNodeData(nodeId, { progress })
-			);
-			updateNodeData(nodeId, { markup, status: 'idle', error: '', progress: '' });
-		} catch (err) {
-			updateNodeData(nodeId, { status: 'error', error: String(err).slice(0, 300), progress: '' });
-		}
+		set({ colors });
+		const pixels = cachedImage(sel.id);
+		if (pixels) set({ markup: traceImageData(pixels, colors) });
 	}
 </script>
 
@@ -128,33 +124,24 @@
 				<span>Fill</span>
 				<input type="color" value={d.fill} oninput={(e) => set({ fill: valOf(e) })} />
 			</label>
-		{:else if sel.type === 'ai'}
-			<textarea
-				class="custom-markup"
-				rows="3"
-				placeholder="describe it — e.g. a horse"
-				value={d.prompt as string}
-				oninput={(e) => set({ prompt: valOf(e) })}
-			></textarea>
-			<button class="action" disabled={(d as AiData).status === 'loading'} onclick={generate}>
-				{(d as AiData).status === 'loading' ? 'Generating…' : 'Generate'}
-			</button>
+		{:else if sel.type === 'trace'}
+			<input class="wide nodrag" type="file" accept="image/*" onchange={onTraceFile} />
 			<label class="field">
-				<span>Size</span>
-				<input type="number" min="8" step="4" value={d.size} oninput={(e) => set({ size: numOf(e) })} />
-			</label>
-			{#if (d as AiData).status === 'error'}
-				<div class="inspector-error">{(d as AiData).error}</div>
-			{/if}
-			{#if !keyPresent}
-				<div class="inspector-hint">No Anthropic API key configured.</div>
+				<span>Colors</span>
 				<input
-					class="wide"
-					type="password"
-					placeholder="sk-ant-..."
-					bind:value={keyDraft}
+					type="number"
+					min="2"
+					max="32"
+					step="1"
+					value={d.colors}
+					oninput={(e) => retrace(numOf(e))}
 				/>
-				<button class="action" disabled={!keyDraft.trim()} onclick={saveKey}>Save key</button>
+			</label>
+			{#if traceError}
+				<div class="inspector-error">{traceError}</div>
+			{/if}
+			{#if typeof d.markup === 'string' && d.markup && !cachedImage(sel.id)}
+				<div class="inspector-hint">Re-upload the image to re-trace with different colors.</div>
 			{/if}
 		{:else if sel.type === 'scale'}
 			<label class="field">

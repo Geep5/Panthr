@@ -13,7 +13,7 @@
 	import { reconnectEdge, type Connection, type FinalConnectionState, type HandleType } from '@xyflow/system';
 
 	import Inspector from './lib/Inspector.svelte';
-	import AiSvgNode from './lib/nodes/AiSvgNode.svelte';
+	import TraceNode from './lib/nodes/TraceNode.svelte';
 	import PreviewNode from './lib/nodes/PreviewNode.svelte';
 	import ReconnectableEdge from './lib/edges/ReconnectableEdge.svelte';
 	import ColorNode from './lib/nodes/ColorNode.svelte';
@@ -28,7 +28,7 @@
 	const nodeTypes = {
 		svgSource: SvgSourceNode,
 		text: TextNode,
-		ai: AiSvgNode,
+		trace: TraceNode,
 		scale: ScaleNode,
 		translate: TranslateNode,
 		rotate: RotateNode,
@@ -78,11 +78,13 @@
 			if (!raw) return null;
 			const parsed = JSON.parse(raw);
 			if (!Array.isArray(parsed?.nodes) || !Array.isArray(parsed?.edges)) return null;
-			return {
-				nodes: parsed.nodes,
-				edges: parsed.edges,
-				nextId: Number(parsed.nextId) || 1
-			};
+			// drop nodes whose type no longer exists (e.g. removed node kinds)
+			const nodes = (parsed.nodes as Node[]).filter((n) => n.type && n.type in nodeTypes);
+			const ids = new Set(nodes.map((n) => n.id));
+			const edges = (parsed.edges as Edge[]).filter(
+				(e) => ids.has(e.source) && ids.has(e.target)
+			);
+			return { nodes, edges, nextId: Number(parsed.nextId) || 1 };
 		} catch {
 			return null;
 		}
@@ -146,7 +148,7 @@
 	const defaults: Record<string, Record<string, unknown>> = {
 		svgSource: { shape: 'circle', size: 120, fill: '#7c6cff', customMarkup: '' },
 		text: { text: 'Hello', fontSize: 36, fill: '#e6e8ee' },
-		ai: { prompt: '', markup: '', size: 120, status: 'idle', error: '', progress: '' },
+		trace: { markup: '', size: 120, colors: 8, name: '' },
 		scale: { percent: 10, duration: 1000 },
 		translate: { amount: 100, unit: 'px', duration: 1000 },
 		position: { x: 0, y: 0, unit: 'percent' },
@@ -194,7 +196,7 @@
 				<strong class="brand"><img src="/logo.svg" alt="Panthr logo" class="brand-logo" /><span class="brand-name">Panthr</span></strong>
 				<button onclick={() => addNode('svgSource')}>+ SVG</button>
 				<button onclick={() => addNode('text')}>+ Text</button>
-				<button onclick={() => addNode('ai')}>+ AI SVG</button>
+				<button onclick={() => addNode('trace')}>+ Trace</button>
 				<button onclick={() => addNode('scale')}>+ Scale</button>
 				<button onclick={() => addNode('translate')}>+ Move X</button>
 				<button onclick={() => addNode('position')}>+ Position</button>

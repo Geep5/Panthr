@@ -22,7 +22,7 @@ all composed on an infinite canvas with per-wire routing.
 | --- | --- |
 | **SVG Source** | Defines a graphic: preset shapes (rect, circle, triangle, star, heart) or raw custom SVG markup, with size and fill. |
 | **Text** | Defines a text graphic with content, font size, and fill. |
-| **AI SVG** | Generates a graphic from a prompt ("a horse") with Claude Fable 5 — the result flows through the graph like any SVG source. |
+| **Trace** | Vectorizes an uploaded image in-browser (imagetracerjs) into layered SVG paths — pick the color count, and the traced graphic flows through the graph like any source. |
 | **Scale** | Grows/shrinks by a percentage over a duration. |
 | **Rotate** | Rotates by degrees over a duration; negative values go counter-clockwise. |
 | **Move X** | Translates left/right by px or % of screen over a duration. |
@@ -45,13 +45,6 @@ controls appear there. Nodes themselves stay compact summaries.
 
 The board auto-saves to `localStorage` (debounced) and restores on reload.
 **Reset** in the toolbar restores the default starting board.
-
-## AI generation
-
-The AI SVG node calls the Anthropic API (`claude-fable-5`) directly from the browser. Provide a key either way:
-
-- `.env.local` with `VITE_ANTHROPIC_API_KEY=sk-ant-...` (gitignored), or
-- paste it in the inspector when an AI node is selected (stored in `localStorage`).
 
 ## Develop
 
