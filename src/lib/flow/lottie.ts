@@ -42,15 +42,20 @@ function trackSvg(track: Track): { svg: string; w: number; h: number } {
 		const text = track.text.replace(/[&<>"']/g, (c) => ESC[c]);
 		const w = Math.max(12, Math.ceil(track.text.length * track.size * 0.62));
 		const h = Math.ceil(track.size * 1.3);
+		const fill = track.tint ?? track.fill;
 		return {
-			svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><text x="${w / 2}" y="${h * 0.76}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${track.size}" fill="${track.fill}">${text}</text></svg>`,
+			svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><text x="${w / 2}" y="${h * 0.76}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${track.size}" fill="${fill}">${text}</text></svg>`,
 			w,
 			h
 		};
 	}
 	const s = track.size;
+	// blanket recolor: CSS beats presentation attributes; keep fill="none" holes
+	const tintStyle = track.tint
+		? `<style>*:not([fill="none"]){fill:${track.tint} !important}[stroke]:not([stroke="none"]){stroke:${track.tint} !important}</style>`
+		: '';
 	return {
-		svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">${track.markup}</svg>`,
+		svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}">${tintStyle}${track.markup}</svg>`,
 		w: s,
 		h: s
 	};

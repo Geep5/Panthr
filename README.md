@@ -27,6 +27,7 @@ all composed on an infinite canvas with per-wire routing.
 | **Rotate** | Rotates by degrees over a duration; negative values go counter-clockwise. |
 | **Move X** | Translates left/right by px or % of screen over a duration. |
 | **Delay** | Holds the current pose for a duration between moves. |
+| **Color** | Blanket-recolors everything passing through — fills and strokes become the chosen color; `fill="none"` holes are preserved. |
 | **Position** | Places graphics on the stage — drag the pad or enter X/Y (px or % of stage). Merges all inputs into one positioned group output. |
 | **Preview** | Compiles everything reaching it to a real Lottie animation and plays it with lottie-web — play/pause, 0–100% scrubber, and a ⭳ button that exports the bodymovin JSON. Has an output so previews can feed other previews and combine. |
 

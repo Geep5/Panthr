@@ -214,6 +214,15 @@ body,
 	font-size: 12px;
 }
 
+.color-swatch {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+	vertical-align: -1px;
+	margin-right: 2px;
+}
+
 /* --- position node drag pad --- */
 
 .pad {

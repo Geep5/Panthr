@@ -37,6 +37,10 @@ export interface DelayData extends Record<string, unknown> {
 	duration: number;
 }
 
+export interface ColorData extends Record<string, unknown> {
+	color: string;
+}
+
 export interface RotateData extends Record<string, unknown> {
 	degrees: number;
 	duration: number;
@@ -78,6 +82,8 @@ export interface Track {
 	/** svg: viewport size. text: font size. */
 	size: number;
 	fill: string;
+	/** Blanket recolor from color nodes; null keeps original colors. */
+	tint: string | null;
 	/** Static offsets from position nodes, composed in chain order. */
 	offsets: PosOffset[];
 	steps: AnimStep[];
@@ -154,6 +160,7 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 					size: Math.max(8, num(d.size, 120)),
 					fill: '',
 					offsets: [],
+					tint: null,
 					steps: []
 				}
 			];
@@ -169,6 +176,7 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 					size: Math.max(8, num(d.fontSize, 36)),
 					fill: String(d.fill ?? '#e6e8ee'),
 					offsets: [],
+					tint: null,
 					steps: []
 				}
 			];
@@ -186,6 +194,7 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 					size: Math.max(8, num(d.size, 120)),
 					fill: '',
 					offsets: [],
+					tint: null,
 					steps: []
 				}
 			];
@@ -219,6 +228,11 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 				unit: d.unit === 'px' ? 'px' : 'percent'
 			};
 			tracks = tracks.map((t) => ({ ...t, offsets: [...t.offsets, off] }));
+		}
+		if (node.type === 'color') {
+			const d = node.data;
+			const tint = String(d.color ?? '#ff5470');
+			tracks = tracks.map((t) => ({ ...t, tint }));
 		}
 		const step = stepFor(node);
 		return step ? tracks.map((t) => ({ ...t, steps: [...t.steps, step] })) : tracks;

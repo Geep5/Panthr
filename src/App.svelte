@@ -16,6 +16,7 @@
 	import AiSvgNode from './lib/nodes/AiSvgNode.svelte';
 	import PreviewNode from './lib/nodes/PreviewNode.svelte';
 	import ReconnectableEdge from './lib/edges/ReconnectableEdge.svelte';
+	import ColorNode from './lib/nodes/ColorNode.svelte';
 	import DelayNode from './lib/nodes/DelayNode.svelte';
 	import PositionNode from './lib/nodes/PositionNode.svelte';
 	import ScaleNode from './lib/nodes/ScaleNode.svelte';
@@ -33,6 +34,7 @@
 		rotate: RotateNode,
 		position: PositionNode,
 		delay: DelayNode,
+		color: ColorNode,
 		preview: PreviewNode
 	};
 	const edgeTypes = { reconnectable: ReconnectableEdge };
@@ -150,6 +152,7 @@
 		position: { x: 0, y: 0, unit: 'percent' },
 		rotate: { degrees: 90, duration: 1000 },
 		delay: { duration: 500 },
+		color: { color: '#ff5470' },
 		preview: { filter: 'all' }
 	};
 
@@ -197,6 +200,7 @@
 				<button onclick={() => addNode('position')}>+ Position</button>
 				<button onclick={() => addNode('rotate')}>+ Rotate</button>
 				<button onclick={() => addNode('delay')}>+ Delay</button>
+				<button onclick={() => addNode('color')}>+ Color</button>
 				<button onclick={() => addNode('preview')}>+ Preview</button>
 				<button class="reset" onclick={resetBoard}>Reset</button>
 			</div>

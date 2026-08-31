@@ -17,6 +17,7 @@
 		translate: 'Move X',
 		rotate: 'Rotate',
 		delay: 'Delay',
+		color: 'Color',
 		position: 'Position',
 		preview: 'Preview'
 	};
@@ -192,6 +193,12 @@
 				<span>Duration ms</span>
 				<input type="number" min="50" step="100" value={d.duration} oninput={(e) => set({ duration: numOf(e) })} />
 			</label>
+		{:else if sel.type === 'color'}
+			<label class="field">
+				<span>Color</span>
+				<input type="color" value={d.color} oninput={(e) => set({ color: valOf(e) })} />
+			</label>
+			<div class="inspector-hint">Recolors every shape passing through this node.</div>
 		{:else if sel.type === 'position'}
 			<div
 				class="pad"
