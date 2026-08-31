@@ -71,12 +71,14 @@
 		}
 		const prompt = String(d.prompt ?? '').trim();
 		if (!prompt) return;
-		updateNodeData(nodeId, { status: 'loading', error: '' });
+		updateNodeData(nodeId, { status: 'loading', error: '', progress: '' });
 		try {
-			const markup = await generateSvg(prompt, key);
-			updateNodeData(nodeId, { markup, status: 'idle', error: '' });
+			const markup = await generateSvg(prompt, key, (progress) =>
+				updateNodeData(nodeId, { progress })
+			);
+			updateNodeData(nodeId, { markup, status: 'idle', error: '', progress: '' });
 		} catch (err) {
-			updateNodeData(nodeId, { status: 'error', error: String(err).slice(0, 300) });
+			updateNodeData(nodeId, { status: 'error', error: String(err).slice(0, 300), progress: '' });
 		}
 	}
 </script>

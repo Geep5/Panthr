@@ -146,7 +146,7 @@
 	const defaults: Record<string, Record<string, unknown>> = {
 		svgSource: { shape: 'circle', size: 120, fill: '#7c6cff', customMarkup: '' },
 		text: { text: 'Hello', fontSize: 36, fill: '#e6e8ee' },
-		ai: { prompt: '', markup: '', size: 120, status: 'idle', error: '' },
+		ai: { prompt: '', markup: '', size: 120, status: 'idle', error: '', progress: '' },
 		scale: { percent: 10, duration: 1000 },
 		translate: { amount: 100, unit: 'px', duration: 1000 },
 		position: { x: 0, y: 0, unit: 'percent' },

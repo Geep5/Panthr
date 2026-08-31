@@ -24,7 +24,7 @@
 
 	<div class="node-meta">
 		{#if data.status === 'loading'}
-			generating…
+			{data.progress || 'generating…'}
 		{:else if data.status === 'error'}
 			error — see inspector
 		{:else if data.prompt}

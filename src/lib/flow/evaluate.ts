@@ -31,6 +31,7 @@ export interface AiData extends Record<string, unknown> {
 	size: number;
 	status: 'idle' | 'loading' | 'error';
 	error: string;
+	progress: string;
 }
 
 export interface DelayData extends Record<string, unknown> {
