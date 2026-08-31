@@ -31,6 +31,19 @@ body,
 	gap: 8px;
 }
 
+/* selection highlight — xyflow puts .selected on the node/edge wrapper */
+.svelte-flow__node.selected .node {
+	border-color: #7c6cff;
+	box-shadow:
+		0 0 0 1.5px #7c6cff,
+		0 4px 20px rgb(124 108 255 / 30%);
+}
+
+.svelte-flow__edge.selected .svelte-flow__edge-path {
+	stroke: #7c6cff;
+	stroke-width: 2;
+}
+
 .node-title {
 	font-weight: 700;
 	font-size: 11px;
