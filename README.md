@@ -28,7 +28,7 @@ all composed on an infinite canvas with per-wire routing.
 | **Move X** | Translates left/right by px or % of screen over a duration. |
 | **Delay** | Holds the current pose for a duration between moves. |
 | **Position** | Places graphics on the stage — drag the pad or enter X/Y (px or % of stage). Merges all inputs into one positioned group output. |
-| **Preview** | Renders everything reaching it on a stage, with a play/pause button and a 0–100% scrubber. Has an output so previews can feed other previews and combine. |
+| **Preview** | Compiles everything reaching it to a real Lottie animation and plays it with lottie-web — play/pause, 0–100% scrubber, and a ⭳ button that exports the bodymovin JSON. Has an output so previews can feed other previews and combine. |
 
 Node options are edited in the **inspector pane** on the right — select a node and its
 controls appear there. Nodes themselves stay compact summaries.
@@ -38,7 +38,7 @@ controls appear there. Nodes themselves stay compact summaries.
 - **Self-aware handles**: every node always shows one free (dashed) input handle — connect to it and another opens below. Transform outputs mirror occupied inputs (`in-i` feeds `out-i`), so each shape keeps its own wire through a chain.
 - **No-op connections rejected**: duplicate wires, self-loops, and cycles never connect.
 - **Rewiring**: drag an edge's end dot onto another handle to re-attach, or drop it on empty canvas to detach. Select + `Backspace` deletes nodes and edges.
-- **Tracks**: wires carry graphics with accumulated animation steps (scales multiply, translations add) and static position offsets. Animations play once and hold — scrub or replay from the preview's transport.
+- **Tracks**: wires carry graphics with accumulated animation steps (scales multiply, translations and rotations add) and static position offsets. Each preview compiles its tracks into Lottie keyframes — what plays in the stage is the same JSON the export button downloads.
 
 ## Persistence
 

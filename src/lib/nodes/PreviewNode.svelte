@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
+	import { onDestroy } from 'svelte';
+	import lottie, { type AnimationItem } from 'lottie-web';
 	import {
 		useEdges,
 		useNodes,
@@ -8,8 +9,8 @@
 		type NodeProps
 	} from '@xyflow/svelte';
 	import { evaluateGraph, type PreviewData } from '../flow/evaluate';
+	import { buildLottie } from '../flow/lottie';
 	import DynamicHandles from './DynamicHandles.svelte';
-	import TrackActor from './TrackActor.svelte';
 
 	let { id, data }: NodeProps<Node<PreviewData>> = $props();
 
@@ -26,82 +27,94 @@
 	// one entry per source even when the same shape arrives on several wires
 	let sourceIds = $derived([...new Set(evaluated.tracks.map((t) => t.sourceId))]);
 
-	// --- transport: play/pause + 0-100% scrub across all actor animations ---
+	// --- lottie playback: the preview plays the actual compiled Lottie ---
 
+	let stageEl = $state<HTMLDivElement>();
+	let anim: AnimationItem | null = null;
 	let playing = $state(false);
 	let progress = $state(0);
 	let scrubbing = false;
+	let lastJson = '';
 
-	const animRegistry = new Map<number, Animation>();
-	setContext('panthr-anim-registry', animRegistry);
+	$effect(() => {
+		const el = stageEl;
+		if (!el) return;
+		// node drags retrigger evaluation; only rebuild when tracks changed
+		const json = JSON.stringify(visible);
+		if (json === lastJson && anim) return;
+		lastJson = json;
+		anim?.destroy();
+		anim = null;
+		playing = false;
+		progress = 0;
+		if (visible.length === 0) return;
+		const { animationData } = buildLottie(visible, el.offsetWidth || 260, el.offsetHeight || 180);
+		anim = lottie.loadAnimation({
+			container: el,
+			renderer: 'svg',
+			loop: false,
+			autoplay: false,
+			animationData
+		});
+		anim.addEventListener('complete', () => {
+			playing = false;
+			progress = 100;
+		});
+	});
 
-	const anims = (): Animation[] => [...animRegistry.values()];
+	onDestroy(() => anim?.destroy());
 
 	function togglePlay() {
-		const all = anims();
-		if (all.length === 0) return;
+		if (!anim) return;
 		if (playing) {
-			all.forEach((a) => a.pause());
+			anim.pause();
 			playing = false;
 		} else {
-			all.forEach((a) => {
-				if (a.playState === 'finished') a.currentTime = 0;
-				a.play();
-			});
+			if (progress >= 100) anim.goToAndStop(0, true);
+			anim.play();
 			playing = true;
 		}
 	}
 
 	function scrubTo(pct: number) {
+		if (!anim) return;
 		progress = pct;
 		playing = false;
-		anims().forEach((a) => {
-			a.pause();
-			const d = Number(a.effect?.getTiming().duration) || 0;
-			a.currentTime = (pct / 100) * d;
-		});
+		anim.goToAndStop((pct / 100) * anim.totalFrames, true);
 	}
 
 	$effect(() => {
 		let raf = 0;
 		const tick = () => {
-			const all = anims();
-			if (playing && all.length > 0) {
-				// animations recreated by graph edits start paused; pick them up
-				all.forEach((a) => {
-					if (a.playState === 'paused') a.play();
-				});
-				// the timeline is as long as the longest track; drive the
-				// scrubber from it so shorter tracks finishing early don't
-				// pin progress at 100%
-				const durations = all.map((a) => Number(a.effect?.getTiming().duration) || 0);
-				const lead = all[durations.indexOf(Math.max(...durations))];
-				if (!scrubbing) {
-					const total = Number(lead.effect?.getTiming().duration) || 1;
-					progress = Math.min(100, (Number(lead.currentTime) / total) * 100);
-				}
-				if (lead.playState === 'finished') {
-					playing = false;
-					progress = 100;
-				}
+			if (anim && playing && !scrubbing) {
+				progress = Math.min(100, (anim.currentFrame / Math.max(1, anim.totalFrames)) * 100);
 			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	});
+
+	function exportLottie() {
+		const el = stageEl;
+		if (visible.length === 0) return;
+		const { animationData } = buildLottie(visible, el?.offsetWidth || 260, el?.offsetHeight || 180);
+		const blob = new Blob([JSON.stringify(animationData)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'panthr-animation.json';
+		a.click();
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <div class="node preview-node">
 	<DynamicHandles nodeId={id} type="target" />
 	<div class="node-title">Preview</div>
 
-	<div class="stage">
-		{#if visible.length > 0}
-			{#each visible as track, i (i)}
-				<TrackActor {track} k={i} />
-			{/each}
-		{:else}
+	<div class="stage" bind:this={stageEl}>
+		{#if visible.length === 0}
 			<div class="stage-hint">{evaluated.error ?? 'Nothing to show for this filter'}</div>
 		{/if}
 	</div>
@@ -125,6 +138,14 @@
 			onchange={() => (scrubbing = false)}
 		/>
 		<span class="pct">{Math.round(progress)}%</span>
+		<button
+			class="play-btn nodrag"
+			title="Export Lottie JSON"
+			disabled={visible.length === 0}
+			onclick={exportLottie}
+		>
+			⭳
+		</button>
 	</div>
 
 	{#if evaluated.tracks.length > 1}

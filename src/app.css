@@ -214,18 +214,6 @@ body,
 	font-size: 12px;
 }
 
-.text-actor {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.text-glyph {
-	font-weight: 700;
-	white-space: nowrap;
-	line-height: 1;
-}
-
 /* --- position node drag pad --- */
 
 .pad {
@@ -312,16 +300,6 @@ body,
 	font-size: 12px;
 	padding: 0 16px;
 	text-align: center;
-}
-
-/* anchored at stage center; offsets/animations move from there.
-   `translate` (not `transform`) so WAAPI keyframes never clobber centering */
-.actor {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	translate: -50% -50%;
-	will-change: transform;
 }
 
 /* --- edge reconnect anchors --- */
