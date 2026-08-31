@@ -50,7 +50,7 @@
 		});
 	}
 
-	// --- image tracing ---
+	// --- image tracing: choosing a file loads it; the Trace button runs it ---
 
 	let traceError = $state('');
 
@@ -61,21 +61,30 @@
 		const nodeId = sel.id;
 		traceError = '';
 		try {
-			const pixels = await fileToImageData(file);
-			cacheImage(nodeId, pixels);
-			const markup = traceImageData(pixels, Number(d.colors) || 8);
-			updateNodeData(nodeId, { markup, name: file.name, size: 120 });
+			cacheImage(nodeId, await fileToImageData(file));
+			updateNodeData(nodeId, { name: file.name });
 		} catch (err) {
 			traceError = String(err).slice(0, 200);
 		}
 		input.value = '';
 	}
 
-	function retrace(colors: number) {
+	function runTrace() {
 		if (!sel) return;
-		set({ colors });
 		const pixels = cachedImage(sel.id);
-		if (pixels) set({ markup: traceImageData(pixels, colors) });
+		if (!pixels) {
+			traceError = 'Choose an image first';
+			return;
+		}
+		traceError = '';
+		try {
+			set({
+				markup: traceImageData(pixels, Number(d.colors) || 8, Number(d.smooth) || 0),
+				size: 120
+			});
+		} catch (err) {
+			traceError = String(err).slice(0, 200);
+		}
 	}
 </script>
 
@@ -128,20 +137,21 @@
 			<input class="wide nodrag" type="file" accept="image/*" onchange={onTraceFile} />
 			<label class="field">
 				<span>Colors</span>
-				<input
-					type="number"
-					min="2"
-					max="32"
-					step="1"
-					value={d.colors}
-					oninput={(e) => retrace(numOf(e))}
-				/>
+				<input type="number" min="2" max="32" step="1" value={d.colors} oninput={(e) => set({ colors: numOf(e) })} />
 			</label>
+			<label class="field">
+				<span>Smoothing</span>
+				<input type="number" min="0" max="10" step="1" value={d.smooth} oninput={(e) => set({ smooth: numOf(e) })} />
+			</label>
+			<button class="action" disabled={!cachedImage(sel.id)} onclick={runTrace}>Trace</button>
 			{#if traceError}
 				<div class="inspector-error">{traceError}</div>
 			{/if}
-			{#if typeof d.markup === 'string' && d.markup && !cachedImage(sel.id)}
-				<div class="inspector-hint">Re-upload the image to re-trace with different colors.</div>
+			{#if !cachedImage(sel.id)}
+				<div class="inspector-hint">
+					Choose an image, tune colors/smoothing, then press Trace. Images stay in memory — re-upload
+					after a reload to re-trace.
+				</div>
 			{/if}
 		{:else if sel.type === 'scale'}
 			<label class="field">

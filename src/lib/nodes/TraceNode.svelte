@@ -5,6 +5,8 @@
 	import DynamicHandles from './DynamicHandles.svelte';
 
 	let { id, data }: NodeProps<Node<TraceData>> = $props();
+
+	let pathCount = $derived((data.markup?.match(/<path/g) ?? []).length);
 </script>
 
 <div class="node source-node">
@@ -21,8 +23,10 @@
 	</div>
 
 	<div class="node-meta">
-		{#if data.name}
-			{data.name} · {data.colors} colors
+		{#if data.markup}
+			{data.name} · {pathCount} paths
+		{:else if data.name}
+			{data.name} — press Trace in the inspector
 		{:else}
 			no image yet
 		{/if}

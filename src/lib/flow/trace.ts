@@ -41,14 +41,19 @@ export async function fileToImageData(file: File, maxDim = 320): Promise<ImageDa
 
 /**
  * Trace pixels into layered SVG paths, normalized to fit the standard
- * 0 0 120 120 track viewBox (contain, centered).
+ * 0 0 120 120 track viewBox (contain, centered). `smooth` (0-10) trades
+ * fidelity for stylization: higher tolerances, larger speck removal, and
+ * pre-blur at the high end.
  */
-export function traceImageData(data: ImageData, colors: number): string {
+export function traceImageData(data: ImageData, colors: number, smooth = 0): string {
+	const s10 = Math.max(0, Math.min(10, Math.round(smooth) || 0));
 	const svg = ImageTracer.imagedataToSVG(data, {
 		numberofcolors: Math.max(2, Math.min(32, Math.round(colors) || 8)),
-		pathomit: 8,
-		ltres: 1,
-		qtres: 1,
+		pathomit: 8 + s10 * 8,
+		ltres: 1 + s10 * 0.8,
+		qtres: 1 + s10 * 0.8,
+		blurradius: s10 >= 4 ? Math.min(5, s10 / 2) : 0,
+		blurdelta: 20,
 		strokewidth: 0,
 		linefilter: true,
 		roundcoords: 1,

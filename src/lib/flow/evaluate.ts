@@ -30,6 +30,7 @@ export interface TraceData extends Record<string, unknown> {
 	markup: string;
 	size: number;
 	colors: number;
+	smooth: number;
 	name: string;
 }
 

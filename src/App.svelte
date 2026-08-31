@@ -148,7 +148,7 @@
 	const defaults: Record<string, Record<string, unknown>> = {
 		svgSource: { shape: 'circle', size: 120, fill: '#7c6cff', customMarkup: '' },
 		text: { text: 'Hello', fontSize: 36, fill: '#e6e8ee' },
-		trace: { markup: '', size: 120, colors: 8, name: '' },
+		trace: { markup: '', size: 120, colors: 8, smooth: 2, name: '' },
 		scale: { percent: 10, duration: 1000 },
 		translate: { amount: 100, unit: 'px', duration: 1000 },
 		position: { x: 0, y: 0, unit: 'percent' },
