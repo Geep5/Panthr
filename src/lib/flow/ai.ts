@@ -1,8 +1,20 @@
-const PLAN_SYSTEM = `You plan flat vector illustrations for a 120x120 viewBox. Reply with ONLY a JSON array — no prose, no code fences. List the parts needed to draw the subject, in paint order (furthest back first: e.g. far-side legs before body, body before head, eyes last). 6 to 12 parts. Each item: {"name": "short part name", "desc": "one sentence: its shape, flat color, and position/coordinates within the 0-120 canvas"}. Plan coordinates so the parts connect into one coherent figure that fills most of the canvas.`;
+const PLAN_SYSTEM = `You plan professional flat vector illustrations for a 120x120 viewBox, in the style of premium logo art: the figure is built from a FEW flowing continuous paths, not from primitive shapes. Reply with ONLY a JSON array — no prose, no code fences. Plan 3 to 7 parts, in paint order:
+1. First part: the COMPLETE SILHOUETTE of the subject — its entire outline (body, limbs, tail, head all in one) drawn as one continuous flowing line, in the main color.
+2. Later parts: overlay shapes layered on top — secondary color masses, shading shapes, markings, highlights, then tiny details like eyes last.
+Each item: {"name": "short part name", "desc": "one sentence: what it covers, its hex color, and its position/coordinates within the 0-120 canvas"}. Plan a palette of 2-4 colors total.`;
 
-const STROKE_PLAN_SYSTEM = `You plan the individual strokes for ONE part of a flat vector illustration in viewBox "0 0 120 120". You are given the subject, the full part plan, the SVG drawn so far by earlier agents, and the part to detail. Reply with ONLY a JSON array — no prose, no code fences — of the strokes needed for that single part, in paint order. A stroke is one SVG element, and its description must say WHAT it is and WHAT it connects: e.g. "the rounded hoof cap closing the bottom of the near front leg", "the curved area connecting the neck to the back", "the white sock marking overlaying the lower leg". Use 1-3 strokes for simple parts and up to 30 for detailed ones. Each item: {"name": "short stroke name", "desc": "what it is + what areas/parts it connects or attaches to + shape/coordinates in the 0-120 canvas + hex color"}. Plan coordinates that connect precisely with what is already drawn, carrying its style and palette forward.`;
+const STROKE_PLAN_SYSTEM = `You plan the pen strokes for ONE part of a professional flat vector illustration in viewBox "0 0 120 120". You are given the subject, the full part plan, the SVG drawn so far by earlier agents, and the part to detail. A stroke is ONE continuous flowing <path> — a single confident pen line, never a primitive shape. Most parts need exactly 1 stroke; use more only for genuinely separate marks. Reply with ONLY a JSON array — no prose, no code fences. Each item: {"name": "short stroke name", "desc": "what it is + what areas/parts it connects to + the route the pen line travels through the 0-120 canvas + hex color"}. Plan routes that connect precisely with what is already drawn.`;
 
-const STROKE_SYSTEM = `You are one agent in a relay of agents, each drawing exactly ONE stroke of a flat vector illustration inside viewBox "0 0 120 120". A stroke is a single SVG element (path/polygon/ellipse/rect etc.). Previous agents drew the SVG you are given; agents after you draw the remaining strokes. You are given the subject, the part being drawn, that part's stroke plan, the SVG so far, and the single stroke YOU own — its description says what it is and which areas it connects. Draw that small piece so it genuinely joins those areas: trace the existing edges it must meet in the SVG so far and align your element's coordinates with them. Reply with ONLY that one SVG element — no <svg> wrapper, no code fences, no prose, no other strokes.`;
+const STROKE_SYSTEM = `You are one agent in a relay, each drawing exactly ONE pen stroke of a professional flat vector illustration inside viewBox "0 0 120 120". Previous agents drew the SVG you are given; you add your single stroke.
+
+STYLE — this is the quality bar, a real example of one stroke from a professional panther logo (one continuous line of smooth cubic curves):
+<path fill="#6A19C0" d="m96 10.4c-1 1-1.1 1.7-3.5 2.1-1.6 0.6-1.6 3.3-3.6 3.6-1.9 0.2-1 2.3-2.5 3.3-2.2 0.9-1.9 2.2-3.3 2.7-2-0.1-2 0.4-2.2 3.5-1 1.7-1.8 1-1.8 2.9-1.3 1.2-1.4 0.5-1.6 2.4-2.4 1.5-1.6 2.1-1.8 3.3l-2.1 2.3c-0.8 1.2 0.3 2.6-1 3.2-1.3 0.7-1.5 1.5-1.5 2l-2.4 3.7c0.6-0.1 3.4-2.6 4.5-3 0.4-0.9 0-2 1.9-2.6 1.3-0.4 0.5-2.1 2.6-2.8 1.2-0.4 0.2-1.8 2.5-3 2.6-1.5 1.8-1.6 2.2-3.2 0.6-1.3 1.9-1.1 1.9-3 0-2.4 3.6-0.7 3.6-4.5 0.2-2.4 2-1.9 2.6-3.3 1-1.6 1.7-2 2.5-3.1l1.6-2.2c1-1.1 6.3-5.2 7-6.9-1.2 0.5-3.9 2.1-5.5 2.4l-0.1 0.2z"/>
+
+RULES:
+- Output exactly ONE <path> element with a "d" of many smooth cubic curves (c/s commands) tracing one continuous closed line, and a flat fill. Rich, organic, varied curvature — like the example.
+- NEVER use ellipse, circle, rect, polygon, or line elements. NEVER build from a few chunky segments — a good stroke has 15-60 curve commands.
+- Trace the existing edges your stroke must meet in the SVG so far and align your curve to them.
+- Reply with ONLY that one <path> — no <svg> wrapper, no code fences, no prose.`;
 
 /** Resolve the Anthropic API key: build-time env first, then localStorage. */
 export function apiKey(): string {
@@ -102,7 +114,7 @@ export async function generateSvg(
 	onProgress?.('planning parts…');
 	let parts: PlanPart[];
 	try {
-		parts = parsePlan(await fable(PLAN_SYSTEM, prompt, key, 1500));
+		parts = parsePlan(await fable(PLAN_SYSTEM, prompt, key, 2000));
 	} catch {
 		parts = [{ name: 'whole drawing', desc: prompt }];
 	}
@@ -151,7 +163,7 @@ SVG so far (inside <svg viewBox="0 0 120 120">):
 ${(markup + partMarkup) || '(empty — you are drawing the first stroke)'}
 
 Draw ONLY stroke ${j + 1}: ${s.name} — ${s.desc}`;
-			const piece = unwrapSvg(stripFences(await fable(STROKE_SYSTEM, user, key, 1500)));
+			const piece = unwrapSvg(stripFences(await fable(STROKE_SYSTEM, user, key, 5000)));
 			if (piece) partMarkup += piece;
 		}
 
