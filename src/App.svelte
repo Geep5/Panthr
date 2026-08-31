@@ -188,7 +188,7 @@
 		<MiniMap pannable zoomable />
 		<Panel position="top-left">
 			<div class="toolbar">
-				<strong class="brand"><img src="/logo.svg" alt="Panthr logo" class="brand-logo" />Panthr</strong>
+				<strong class="brand"><img src="/logo.svg" alt="Panthr logo" class="brand-logo" /><span class="brand-name">Panthr</span></strong>
 				<button onclick={() => addNode('svgSource')}>+ SVG</button>
 				<button onclick={() => addNode('text')}>+ Text</button>
 				<button onclick={() => addNode('ai')}>+ AI SVG</button>

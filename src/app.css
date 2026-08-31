@@ -425,7 +425,6 @@ body,
 .toolbar .brand {
 	display: flex;
 	align-items: center;
-	gap: 8px;
 	font-size: 13px;
 	margin-right: 6px;
 	color: #7c6cff;
@@ -434,6 +433,24 @@ body,
 .brand-logo {
 	height: 20px;
 	width: auto;
+}
+
+.brand-name {
+	max-width: 0;
+	margin-left: 0;
+	opacity: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	transition:
+		max-width 0.2s ease,
+		opacity 0.2s ease,
+		margin-left 0.2s ease;
+}
+
+.brand:hover .brand-name {
+	max-width: 80px;
+	margin-left: 8px;
+	opacity: 1;
 }
 
 .toolbar button {
