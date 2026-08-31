@@ -22,11 +22,16 @@ all composed on an infinite canvas with per-wire routing.
 | --- | --- |
 | **SVG Source** | Defines a graphic: preset shapes (rect, circle, triangle, star, heart) or raw custom SVG markup, with size and fill. |
 | **Text** | Defines a text graphic with content, font size, and fill. |
+| **AI SVG** | Generates a graphic from a prompt ("a horse") via OpenAI — the result flows through the graph like any SVG source. |
 | **Scale** | Grows/shrinks by a percentage over a duration. |
+| **Rotate** | Rotates by degrees over a duration; negative values go counter-clockwise. |
 | **Move X** | Translates left/right by px or % of screen over a duration. |
 | **Delay** | Holds the current pose for a duration between moves. |
 | **Position** | Places graphics on the stage — drag the pad or enter X/Y (px or % of stage). Merges all inputs into one positioned group output. |
 | **Preview** | Renders everything reaching it on a stage, with a play/pause button and a 0–100% scrubber. Has an output so previews can feed other previews and combine. |
+
+Node options are edited in the **inspector pane** on the right — select a node and its
+controls appear there. Nodes themselves stay compact summaries.
 
 ## The wiring model
 
@@ -39,6 +44,13 @@ all composed on an infinite canvas with per-wire routing.
 
 The board auto-saves to `localStorage` (debounced) and restores on reload.
 **Reset** in the toolbar restores the default starting board.
+
+## AI generation
+
+The AI SVG node calls the OpenAI API directly from the browser. Provide a key either way:
+
+- `.env.local` with `VITE_OPENAI_API_KEY=sk-...` (gitignored), or
+- paste it in the inspector when an AI node is selected (stored in `localStorage`).
 
 ## Develop
 

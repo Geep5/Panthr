@@ -5,12 +5,15 @@
 		MiniMap,
 		Panel,
 		SvelteFlow,
+		SvelteFlowProvider,
 		type Edge,
 		type Node
 	} from '@xyflow/svelte';
 	import '@xyflow/svelte/dist/style.css';
 	import { reconnectEdge, type Connection, type FinalConnectionState, type HandleType } from '@xyflow/system';
 
+	import Inspector from './lib/Inspector.svelte';
+	import AiSvgNode from './lib/nodes/AiSvgNode.svelte';
 	import PreviewNode from './lib/nodes/PreviewNode.svelte';
 	import ReconnectableEdge from './lib/edges/ReconnectableEdge.svelte';
 	import DelayNode from './lib/nodes/DelayNode.svelte';
@@ -24,6 +27,7 @@
 	const nodeTypes = {
 		svgSource: SvgSourceNode,
 		text: TextNode,
+		ai: AiSvgNode,
 		scale: ScaleNode,
 		translate: TranslateNode,
 		rotate: RotateNode,
@@ -140,6 +144,7 @@
 	const defaults: Record<string, Record<string, unknown>> = {
 		svgSource: { shape: 'circle', size: 120, fill: '#7c6cff', customMarkup: '' },
 		text: { text: 'Hello', fontSize: 36, fill: '#e6e8ee' },
+		ai: { prompt: '', markup: '', size: 120, status: 'idle', error: '' },
 		scale: { percent: 10, duration: 1000 },
 		translate: { amount: 100, unit: 'px', duration: 1000 },
 		position: { x: 0, y: 0, unit: 'percent' },
@@ -163,7 +168,9 @@
 </script>
 
 <div class="app">
-	<SvelteFlow
+	<SvelteFlowProvider>
+		<div class="canvas">
+			<SvelteFlow
 		bind:nodes
 		bind:edges
 		{nodeTypes}
@@ -184,6 +191,7 @@
 				<strong class="brand"><img src="/logo.svg" alt="Panthr logo" class="brand-logo" />Panthr</strong>
 				<button onclick={() => addNode('svgSource')}>+ SVG</button>
 				<button onclick={() => addNode('text')}>+ Text</button>
+				<button onclick={() => addNode('ai')}>+ AI SVG</button>
 				<button onclick={() => addNode('scale')}>+ Scale</button>
 				<button onclick={() => addNode('translate')}>+ Move X</button>
 				<button onclick={() => addNode('position')}>+ Position</button>
@@ -193,5 +201,8 @@
 				<button class="reset" onclick={resetBoard}>Reset</button>
 			</div>
 		</Panel>
-	</SvelteFlow>
+			</SvelteFlow>
+		</div>
+		<Inspector />
+	</SvelteFlowProvider>
 </div>

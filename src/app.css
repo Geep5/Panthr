@@ -14,6 +14,89 @@ body,
 
 .app {
 	height: 100%;
+	display: flex;
+}
+
+.canvas {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+}
+
+/* --- inspector pane --- */
+
+.inspector {
+	width: 280px;
+	flex-shrink: 0;
+	height: 100%;
+	box-sizing: border-box;
+	padding: 16px 14px;
+	overflow-y: auto;
+	background: #12141b;
+	border-left: 1px solid #2b3040;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-size: 12px;
+}
+
+.inspector-title {
+	font-weight: 700;
+	font-size: 12px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #7c6cff;
+}
+
+.inspector-id {
+	font-size: 11px;
+	color: #6b7389;
+	margin-top: -6px;
+}
+
+.inspector-hint {
+	color: #6b7389;
+	line-height: 1.5;
+}
+
+.inspector-error {
+	color: #e05555;
+	font-size: 11px;
+	line-height: 1.4;
+	word-break: break-word;
+}
+
+.inspector .field input.wide,
+.inspector input.wide {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 4px 6px;
+	border: 1px solid #2b3040;
+	border-radius: 6px;
+	background: #0f1115;
+	color: #e6e8ee;
+	font-size: 12px;
+}
+
+.inspector .action {
+	padding: 6px 10px;
+	border: 1px solid #7c6cff;
+	border-radius: 6px;
+	background: #7c6cff22;
+	color: #a99cff;
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.inspector .action:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.thumb-hint {
+	color: #6b7389;
+	font-size: 11px;
+	padding: 24px 0;
 }
 
 /* --- custom node chrome --- */

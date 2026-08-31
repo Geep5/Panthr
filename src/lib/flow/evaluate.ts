@@ -25,6 +25,14 @@ export interface TextData extends Record<string, unknown> {
 	fill: string;
 }
 
+export interface AiData extends Record<string, unknown> {
+	prompt: string;
+	markup: string;
+	size: number;
+	status: 'idle' | 'loading' | 'error';
+	error: string;
+}
+
 export interface DelayData extends Record<string, unknown> {
 	duration: number;
 }
@@ -160,6 +168,23 @@ export function evaluateGraph(previewId: string, nodes: Node[], edges: Edge[]): 
 					text: String(d.text ?? '') || 'Text',
 					size: Math.max(8, num(d.fontSize, 36)),
 					fill: String(d.fill ?? '#e6e8ee'),
+					offsets: [],
+					steps: []
+				}
+			];
+		}
+		if (node.type === 'ai') {
+			const d = node.data;
+			const markup = String(d.markup ?? '');
+			if (!markup) return [];
+			return [
+				{
+					sourceId: node.id,
+					kind: 'svg',
+					markup,
+					text: '',
+					size: Math.max(8, num(d.size, 120)),
+					fill: '',
 					offsets: [],
 					steps: []
 				}
