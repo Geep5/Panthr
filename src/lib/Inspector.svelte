@@ -80,10 +80,8 @@
 	}
 </script>
 
-<aside class="inspector">
-	{#if !sel}
-		<div class="inspector-hint">Select a node to edit its options</div>
-	{:else}
+{#if sel}
+	<aside class="inspector">
 		<div class="inspector-title">{LABELS[sel.type ?? ''] ?? sel.type}</div>
 		<div class="inspector-id">{sel.id}</div>
 
@@ -237,5 +235,5 @@
 				<input class="wide" type="text" readonly value={(d as PreviewData).filter} />
 			</label>
 		{/if}
-	{/if}
-</aside>
+	</aside>
+{/if}
