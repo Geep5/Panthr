@@ -29,6 +29,11 @@ export interface DelayData extends Record<string, unknown> {
 	duration: number;
 }
 
+export interface RotateData extends Record<string, unknown> {
+	degrees: number;
+	duration: number;
+}
+
 export interface PositionData extends Record<string, unknown> {
 	x: number;
 	y: number;
@@ -42,8 +47,8 @@ export interface PreviewData extends Record<string, unknown> {
 
 export interface AnimStep {
 	/** wait: hold the current transform for `duration`. */
-	kind: 'scale' | 'translateX' | 'wait';
-	/** scale: percent delta (+10 = grow 10%). translateX: amount in `unit`. */
+	kind: 'scale' | 'translateX' | 'rotate' | 'wait';
+	/** scale: % delta (+10 = grow 10%). translateX: amount in `unit`. rotate: degrees. */
 	amount: number;
 	unit: 'px' | 'percent';
 	duration: number;
@@ -95,6 +100,14 @@ function stepFor(node: Node): AnimStep | null {
 			kind: 'translateX',
 			amount: num(d.amount, 50),
 			unit: d.unit === 'percent' ? 'percent' : 'px',
+			duration: num(d.duration, 1000)
+		};
+	}
+	if (node.type === 'rotate') {
+		return {
+			kind: 'rotate',
+			amount: num(d.degrees, 90),
+			unit: 'px',
 			duration: num(d.duration, 1000)
 		};
 	}
@@ -221,12 +234,13 @@ export function buildAnimation(
 
 	let scale = 1;
 	let tx = 0;
+	let rot = 0;
 	let elapsed = 0;
 
 	const keyframes: Keyframe[] = [
 		{
 			offset: 0,
-			transform: `translate(${base.x.toFixed(1)}px, ${base.y.toFixed(1)}px) scale(1)`,
+			transform: `translate(${base.x.toFixed(1)}px, ${base.y.toFixed(1)}px) rotate(0deg) scale(1)`,
 			easing: 'ease-in-out'
 		}
 	];
@@ -237,11 +251,13 @@ export function buildAnimation(
 			scale *= 1 + s.amount / 100;
 		} else if (s.kind === 'translateX') {
 			tx += s.unit === 'percent' ? (s.amount / 100) * stageWidth : s.amount;
+		} else if (s.kind === 'rotate') {
+			rot += s.amount;
 		}
 		// wait: transform unchanged, the segment just holds it
 		keyframes.push({
 			offset: elapsed / total,
-			transform: `translate(${(base.x + tx).toFixed(1)}px, ${base.y.toFixed(1)}px) scale(${scale.toFixed(4)})`,
+			transform: `translate(${(base.x + tx).toFixed(1)}px, ${base.y.toFixed(1)}px) rotate(${rot.toFixed(1)}deg) scale(${scale.toFixed(4)})`,
 			easing: 'ease-in-out'
 		});
 	});

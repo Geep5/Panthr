@@ -16,6 +16,7 @@
 	import DelayNode from './lib/nodes/DelayNode.svelte';
 	import PositionNode from './lib/nodes/PositionNode.svelte';
 	import ScaleNode from './lib/nodes/ScaleNode.svelte';
+	import RotateNode from './lib/nodes/RotateNode.svelte';
 	import SvgSourceNode from './lib/nodes/SvgSourceNode.svelte';
 	import TextNode from './lib/nodes/TextNode.svelte';
 	import TranslateNode from './lib/nodes/TranslateNode.svelte';
@@ -25,6 +26,7 @@
 		text: TextNode,
 		scale: ScaleNode,
 		translate: TranslateNode,
+		rotate: RotateNode,
 		position: PositionNode,
 		delay: DelayNode,
 		preview: PreviewNode
@@ -141,6 +143,7 @@
 		scale: { percent: 10, duration: 1000 },
 		translate: { amount: 100, unit: 'px', duration: 1000 },
 		position: { x: 0, y: 0, unit: 'percent' },
+		rotate: { degrees: 90, duration: 1000 },
 		delay: { duration: 500 },
 		preview: { filter: 'all' }
 	};
@@ -184,6 +187,7 @@
 				<button onclick={() => addNode('scale')}>+ Scale</button>
 				<button onclick={() => addNode('translate')}>+ Move X</button>
 				<button onclick={() => addNode('position')}>+ Position</button>
+				<button onclick={() => addNode('rotate')}>+ Rotate</button>
 				<button onclick={() => addNode('delay')}>+ Delay</button>
 				<button onclick={() => addNode('preview')}>+ Preview</button>
 				<button class="reset" onclick={resetBoard}>Reset</button>
