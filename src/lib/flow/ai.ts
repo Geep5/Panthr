@@ -1,8 +1,8 @@
 const PLAN_SYSTEM = `You plan flat vector illustrations for a 120x120 viewBox. Reply with ONLY a JSON array — no prose, no code fences. List the parts needed to draw the subject, in paint order (furthest back first: e.g. far-side legs before body, body before head, eyes last). 6 to 12 parts. Each item: {"name": "short part name", "desc": "one sentence: its shape, flat color, and position/coordinates within the 0-120 canvas"}. Plan coordinates so the parts connect into one coherent figure that fills most of the canvas.`;
 
-const STROKE_PLAN_SYSTEM = `You plan the individual strokes for ONE part of a flat vector illustration in viewBox "0 0 120 120". You are given the subject, the full part plan, and the part to detail. Reply with ONLY a JSON array — no prose, no code fences — of the strokes needed for that single part, in paint order. A stroke is one SVG element to draw: e.g. a hoof's perimeter shape, then its inner marking. Use 1-3 strokes for simple parts and up to 30 for detailed ones. Each item: {"name": "short stroke name", "desc": "one sentence: element type, shape/coordinates in the 0-120 canvas, hex color"}. Follow the part plan's coordinates exactly so all parts' strokes assemble into one coherent figure.`;
+const STROKE_PLAN_SYSTEM = `You plan the individual strokes for ONE part of a flat vector illustration in viewBox "0 0 120 120". You are given the subject, the full part plan, the SVG drawn so far by earlier agents, and the part to detail. Reply with ONLY a JSON array — no prose, no code fences — of the strokes needed for that single part, in paint order. A stroke is one SVG element, and its description must say WHAT it is and WHAT it connects: e.g. "the rounded hoof cap closing the bottom of the near front leg", "the curved area connecting the neck to the back", "the white sock marking overlaying the lower leg". Use 1-3 strokes for simple parts and up to 30 for detailed ones. Each item: {"name": "short stroke name", "desc": "what it is + what areas/parts it connects or attaches to + shape/coordinates in the 0-120 canvas + hex color"}. Plan coordinates that connect precisely with what is already drawn, carrying its style and palette forward.`;
 
-const STROKE_SYSTEM = `You are one agent in a relay of agents, each drawing exactly ONE stroke of a flat vector illustration inside viewBox "0 0 120 120". A stroke is a single SVG element (path/polygon/ellipse/rect etc.). Previous agents drew the SVG you are given; agents after you draw the remaining strokes. You are given the subject, the part being drawn, that part's stroke plan, the SVG so far, and the single stroke YOU own. Reply with ONLY that one SVG element — no <svg> wrapper, no code fences, no prose, no other strokes. Match the plan's coordinates and the palette of what is already drawn.`;
+const STROKE_SYSTEM = `You are one agent in a relay of agents, each drawing exactly ONE stroke of a flat vector illustration inside viewBox "0 0 120 120". A stroke is a single SVG element (path/polygon/ellipse/rect etc.). Previous agents drew the SVG you are given; agents after you draw the remaining strokes. You are given the subject, the part being drawn, that part's stroke plan, the SVG so far, and the single stroke YOU own — its description says what it is and which areas it connects. Draw that small piece so it genuinely joins those areas: trace the existing edges it must meet in the SVG so far and align your element's coordinates with them. Reply with ONLY that one SVG element — no <svg> wrapper, no code fences, no prose, no other strokes.`;
 
 /** Resolve the Anthropic API key: build-time env first, then localStorage. */
 export function apiKey(): string {
@@ -87,12 +87,12 @@ function parsePlan(text: string): PlanPart[] {
 }
 
 /**
- * Three-tier generation. A part planner splits the subject into parts in
- * paint order. Then one stroke planner per part decides its individual
- * strokes (1-30: perimeter, markings, ...) — the planners run in parallel,
- * planning from the blueprint's coordinates. Finally every stroke gets its
- * own fresh builder agent, strictly one after the other, each seeing the
- * SVG built so far.
+ * Three-tier generation, fully sequential to carry the design forward.
+ * A part planner splits the subject into parts in paint order. Then, part
+ * by part: a stroke planner decides that part's individual strokes (1-30:
+ * perimeter, markings, ...) seeing the SVG built so far, and every stroke
+ * gets its own fresh builder agent, one after the other, each seeing the
+ * work of all agents before it.
  */
 export async function generateSvg(
 	prompt: string,
@@ -108,42 +108,38 @@ export async function generateSvg(
 	}
 
 	const planList = parts.map((q, j) => `${j + 1}. ${q.name} — ${q.desc}`).join('\n');
+	let markup = '';
 
-	// one stroke planner per part, all in parallel — only builders are sequential
-	onProgress?.(`planning strokes (${parts.length} planners)…`);
-	const strokePlans = await Promise.all(
-		parts.map(async (p, i) => {
-			try {
-				return parsePlan(
-					await fable(
-						STROKE_PLAN_SYSTEM,
-						`Subject: ${prompt}
+	for (const [i, p] of parts.entries()) {
+		const where = `${p.name} (${i + 1}/${parts.length})`;
+
+		onProgress?.(`planning strokes for ${where}…`);
+		let strokes: PlanPart[];
+		try {
+			strokes = parsePlan(
+				await fable(
+					STROKE_PLAN_SYSTEM,
+					`Subject: ${prompt}
 
 Part plan:
 ${planList}
 
+SVG so far (inside <svg viewBox="0 0 120 120">):
+${markup || '(empty — nothing drawn yet)'}
+
 Plan the strokes for part ${i + 1}: ${p.name} — ${p.desc}`,
-						key,
-						2000
-					)
-				);
-			} catch {
-				return [{ name: p.name, desc: p.desc }];
-			}
-		})
-	);
+					key,
+					2000
+				)
+			);
+		} catch {
+			strokes = [{ name: p.name, desc: p.desc }];
+		}
 
-	const totalStrokes = strokePlans.reduce((a, s) => a + s.length, 0);
-	let markup = '';
-	let done = 0;
-
-	for (const [i, p] of parts.entries()) {
-		const strokes = strokePlans[i];
 		const strokeList = strokes.map((q, k) => `${k + 1}. ${q.name} — ${q.desc}`).join('\n');
 		let partMarkup = '';
 		for (const [j, s] of strokes.entries()) {
-			done += 1;
-			onProgress?.(`${p.name} · ${s.name} (${done}/${totalStrokes})…`);
+			onProgress?.(`${where} · ${s.name} (stroke ${j + 1}/${strokes.length})…`);
 			const user = `Subject: ${prompt}
 
 Current part: ${p.name} — ${p.desc}
